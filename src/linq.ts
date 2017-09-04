@@ -13,12 +13,15 @@ import { takeWhile as _takeWhile } from './methods';
 import { toArray as _toArray } from './methods';
 import { where as _where } from './methods';
 
+import { Newable } from './_newable';
+import { TypedArray } from './_typed-array';
+
 export interface Linq<T> extends Iterable<T> {
   all(predicate: (value: T) => boolean): boolean;
   any(predicate: (value: T) => boolean): boolean;
 
   count(): number;
-  toArray(): T[];
+  toArray(type?: Newable<TypedArray>): T[];
 
   take(count: number): Linq<T>;
   takeWhile(predicate: (value: T) => boolean): Linq<T>;
@@ -60,19 +63,19 @@ class _Linq<T> implements Linq<T> {
   last(predicate?: (value: T) => boolean): T | undefined {
     return _last(this, predicate);
   }
-  toArray(){
+  toArray() {
     return _toArray<T>(this);
   }
-  orderBy(comparer: (a: T, b: T) => number){
+  orderBy(comparer: (a: T, b: T) => number) {
     return new _Linq<T>(() => _orderBy(this, comparer));
   }
-  skip(count:number){
+  skip(count: number) {
     return new _Linq<T>(() => _skip(this, count));
   }
   skipWhile(predicate: (value: T) => boolean) {
     return new _Linq<T>(() => _skipWhile(this, predicate));
   }
-  take(count:number){
+  take(count: number) {
     return new _Linq<T>(() => _take(this, count));
   }
   takeWhile(predicate: (value: T) => boolean) {
