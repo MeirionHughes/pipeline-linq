@@ -7,9 +7,13 @@ export * from './take-while';
 export * from './skip';
 export * from './skip-while';
 
+export * from './order-by';
+
 export * from './first';
 export * from './last';
 
 export * from './count';
 export * from './all';
 export * from './any';
+
+export * from './to-array';
