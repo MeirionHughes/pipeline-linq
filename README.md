@@ -1,5 +1,5 @@
-# pipeline-async-linq
-sync and async linq generators and helpers, with complete typescript support. 
+# pipeline-linq
+sync and async generators/helpers to form linq-like iterable queries, complete will full typescript and es2015 `module` support. 
 
 ## Install
 install with either npm or yarn: 
@@ -18,7 +18,14 @@ for versions `pipeline-linq@ < 1.0`, the package will polyfill the `Symbol.async
 ```ts
 import {linq} from 'pipeline-linq'
 
-let data = [1, 2, 3, 4]; 
+let data = {
+  *[Symbol.iterator](){
+    yield 1; 
+    yield 2; 
+    yield 3; 
+    yield 4;
+  }
+}
 
 let result = 
   linq(data)
@@ -36,7 +43,7 @@ Converting to an async pipeline will cause all subsequent method calls to be eva
 ```ts
 import {linq} from 'pipeline-linq'
 
-let data = [1, 2, 3, 4]; 
+let data = [1, 2, 3, 4];
 
 async function main() {
   let query = linq(data)
