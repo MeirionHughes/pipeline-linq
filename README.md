@@ -9,7 +9,7 @@ install with either npm or yarn:
 
 ## Dependencies
 
-for versions `pipeline-linq@ < 1.0`, the package will polyfill the `Symbol.asyncIterator` using `core-js` when the package is imported
+For versions `pipeline-linq @ < 1.0`, this package, when imported,  will polyfill the `Symbol.asyncIterator` using `core-js`. 
 
 ## Basic Usage
 
@@ -36,9 +36,9 @@ let result =
 console.log(result);
 ```
 
-By default the call to `linq` returns the synchronous pipeline, you can switch to the async equivalents by passing through `true` at the end of most supporting methods. 
+By default the call to `linq` returns the synchronous query, you can switch to the async equivalents by passing through `true` at the end of most supporting methods. 
 
-Converting to an async pipeline will cause all subsequent method calls to be evaluated using the `Symbol.asyncIterator` and you must await the resulting promise or use `for-await` to iterate. 
+Converting to an async query will cause all subsequent method calls to be evaluated using the `Symbol.asyncIterator` and you must await the resulting promise or use `for-await` to iterate the query. 
 
 ```ts
 import {linq} from 'pipeline-linq'
@@ -61,10 +61,10 @@ main();
 
 ## Generators 
 
-You can use the generators directly importing them: 
+You can use the sync generators directly by importing them: 
 
 ```ts
-import { where, select, first } from './src';
+import { where, select, first } from 'pipeline-linq';
 
 let data = [1, 2, 3, 4];
 
@@ -75,5 +75,26 @@ let result = first(select_);
 
 ## Pipeline Operator
 > see proposal [pipeline-operator](https://github.com/tc39/proposal-pipeline-operator)
+
+**Subject to change.**
+All generators and helper methods take the source as the first parameter and so will be readily available to use with the pipeline operator. For now, you could use the [babel transformer](https://www.npmjs.com/package/babel-plugin-transform-pipeline) and use:  
+
+```ts
+import { where, select, first } from 'pipeline-linq';
+
+let result = [1, 2, 3, 4] 
+  |> _ => where(_, x => x > 2)
+  |> _ => select(_, x => x * 2)
+  |> _ => first(_);
+```
+
+it is hoped the final syntax will more or less resemble: 
+
+```js
+let result = [1, 2, 3, 4] 
+  :: where(x => x > 2)
+  :: select(x => x * 2)
+  :: first();
+```
 
 
