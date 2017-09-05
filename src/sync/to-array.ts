@@ -1,16 +1,15 @@
-import { Newable } from '../_newable';
-import { TypedArray } from '../_typed-array';
+import { TypedArray, TypedArrayConstructor } from '../_typed-array';
 
 export function toArray<T>(
   source: Iterable<T>
 ): T[]
 export function toArray<T, TArray extends TypedArray>(
   source: Iterable<T>,
-  type: Newable<TArray>
+  type: TypedArrayConstructor<TArray>
 ): TArray
 export function toArray<T, TArray extends TypedArray>(
   source: Iterable<T>,
-  type?: Newable<TArray>
+  type?: TypedArrayConstructor<TArray>
 ): TArray | T[] {   
   if (type !== undefined){
     /*let cache = new Array(32);

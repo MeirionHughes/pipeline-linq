@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "core-js": "^2.5.1",
+    "typescript": "^2.5.2"
+  }
+}

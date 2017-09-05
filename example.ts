@@ -1,16 +1,8 @@
-import { linq } from './src';
+import { where, select, first } from './src';
 
+let data = [1, 2, 3, 4];
 
-let set = linq(new Float32Array([1, 2, 3, 4]))
-  .where(x => x > 2)
-  .selectMany(function* (x) {
-    for (let i = 0; i < x; i++) {
-      yield i;
-    }
-  })
-  .toArray(Float32Array);
+let where_ = where(data, x => x > 2);
+let select_ = select(where_, x => x * 2);
+let result = first(select_);
 
-
-for (let item of set) {
-  console.log(item);
-}

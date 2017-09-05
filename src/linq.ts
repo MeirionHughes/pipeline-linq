@@ -1,27 +1,53 @@
-import { all as _all } from './methods';
-import { any as _any } from './methods';
-import { count as _count } from './methods';
-import { first as _first } from './methods';
-import { last as _last } from './methods';
-import { orderBy as _orderBy } from './methods';
-import { select as _select } from './methods';
-import { selectMany as _selectMany } from './methods';
-import { skip as _skip } from './methods';
-import { skipWhile as _skipWhile } from './methods';
-import { take as _take } from './methods';
-import { takeWhile as _takeWhile } from './methods';
-import { toArray as _toArray } from './methods';
-import { where as _where } from './methods';
+import { all as _all } from './sync';
+import { any as _any } from './sync';
+import { count as _count } from './sync';
 
-import { Newable } from './_newable';
-import { TypedArray } from './_typed-array';
+import { first as _first } from './sync';
+import { first as _firstAsync } from './async';
+
+import { last as _last } from './sync';
+import { orderBy as _orderBy } from './sync';
+import { select as _select } from './sync';
+import { selectMany as _selectMany } from './sync';
+import { skip as _skip } from './sync';
+import { skipWhile as _skipWhile } from './sync';
+import { take as _take } from './sync';
+import { takeWhile as _takeWhile } from './sync';
+import { toArray as _toArray } from './sync';
+
+import { where as _where } from './sync';
+import { where as _whereAsync } from './async';
+
+export function linq<T>(
+  source: Iterable<T>
+): Linq<T>
+export function linq<T>(
+  source: Iterable<T>,
+  async: true
+): LinqAsync<T>
+export function linq<T>(
+  source: AsyncIterable<T>
+): LinqAsync<T>
+export function linq<T>(
+  source: Iterable<T> | AsyncIterable<T>,
+  async?: true
+): Linq<T> | LinqAsync<T> {
+
+  if (source[Symbol.asyncIterator] !== undefined) {
+    return new _LinqAsync<T>(() => source[Symbol.asyncIterator]())
+  }
+  if (async) {
+    return new _LinqAsync<T>(() => { return source[Symbol.iterator]() })
+  }
+  return new _Linq<T>(() => source[Symbol.iterator]());
+}
 
 export interface Linq<T> extends Iterable<T> {
   all(predicate: (value: T) => boolean): boolean;
   any(predicate: (value: T) => boolean): boolean;
 
   count(): number;
-  toArray(type?: Newable<TypedArray>): T[];
+  toArray(): T[];
 
   take(count: number): Linq<T>;
   takeWhile(predicate: (value: T) => boolean): Linq<T>;
@@ -34,19 +60,23 @@ export interface Linq<T> extends Iterable<T> {
   last(predicate?: (value: T) => boolean): T | undefined;
 
   where(predicate: (value: T, index: number) => boolean): Linq<T>
+  where(predicate: (value: T, index: number) => boolean | Promise<boolean>, async:true): LinqAsync<T>
+
   select<R>(selector: (value: T, index: number) => R): Linq<R>
   selectMany<R>(selector: (value: T, index: number) => Iterable<R>): Linq<R>
 }
 
-export function linq<T>(
-  source: Iterable<T>
-): Linq<T> {
-  return new _Linq<T>(() => source[Symbol.iterator]());
+export interface LinqAsync<T> extends AsyncIterable<T> {
+  where(predicate: (value: T, index: number) => boolean | Promise<boolean>): LinqAsync<T>
+  first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
 }
 
 class _Linq<T> implements Linq<T> {
-  [Symbol.iterator];
-  constructor(private _iterable) { this[Symbol.iterator] = _iterable }
+  [Symbol.iterator]
+  [Symbol.asyncIterator];
+  constructor(private _iterable) { 
+    this[Symbol.asyncIterator] = this[Symbol.iterator] = _iterable
+  }
 
   all(predicate: (value: T) => boolean) {
     return _all(this, predicate);
@@ -81,7 +111,13 @@ class _Linq<T> implements Linq<T> {
   takeWhile(predicate: (value: T) => boolean) {
     return new _Linq<T>(() => _takeWhile(this, predicate));
   }
-  where(predicate: (value: T, index: number) => boolean) {
+
+  where(predicate: (value: T, index: number) => boolean): Linq<T>
+  where(predicate: (value: T, index: number) => boolean | Promise<boolean>, async:true): LinqAsync<T>
+  where(predicate: (value: T, index: number) => boolean, async?:true): Linq<T> | LinqAsync<T> {
+    if(async) { 
+      return new _LinqAsync(() => _whereAsync(this, predicate))
+    }
     return new _Linq<T>(() => _where(this, predicate));
   }
   select<R>(selector: (value: T, index: number) => R) {
@@ -89,5 +125,21 @@ class _Linq<T> implements Linq<T> {
   }
   selectMany<R>(selector: (value: T, index: number) => Iterable<R>) {
     return new _Linq<R>(() => _selectMany(this, selector));
+  }
+}
+
+class _LinqAsync<T> implements LinqAsync<T> {
+  [Symbol.iterator]
+  [Symbol.asyncIterator];
+  constructor(private _iterable) { 
+    this[Symbol.asyncIterator] = this[Symbol.iterator] = _iterable
+  }
+
+  first(predicate: (value: T) => boolean | Promise<boolean>) {
+    return _firstAsync(this, predicate);
+  }
+
+  where(predicate: (value: T, index: number) => boolean | Promise<boolean>) {
+    return new _LinqAsync<T>(() => _whereAsync(this, predicate));
   }
 }

@@ -7,3 +7,7 @@ export type TypedArray =
   Int32Array |
   Float32Array |
   Float64Array;
+
+export type TypedArrayConstructor<T extends TypedArray> = {
+  new(length: number): T;
+}
