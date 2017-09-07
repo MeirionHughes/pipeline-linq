@@ -75,7 +75,7 @@ let result = first(select_);
 
 ## Advanced Usage
 
-The linq object has a method `chain` that can be used to insert custom iterators into the iterator chain. 
+The Linq and LinqAsync interfaces have a method `chain` that can be used to insert custom iterators into the iterator sequence. 
 
 A custom filter method: 
 
@@ -93,7 +93,7 @@ let results = linq([10, "hello", true])
   .toArray();
 ```
 
-Storing a query and inserting into a search 
+It is also possible to insert complex queries: 
 
 ```ts
 let query = function (source: Iterable<number>) {

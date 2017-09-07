@@ -19,6 +19,7 @@ import { count as _countAsync } from './async';
 import { first as _firstAsync } from './async';
 import { last as _lastAsync } from './async';
 import { orderBy as _orderByAsync } from './async';
+import { parallel as _parallelAsync } from './async';
 import { select as _selectAsync } from './async';
 import { selectMany as _selectManyAsync } from './async';
 import { skip as _skipAsync } from './async';
@@ -69,7 +70,6 @@ export interface Linq<T> extends Iterable<T> {
   toArray(): T[];
   where(predicate: (value: T, index: number) => boolean): Linq<T>
   where(predicate: (value: T, index: number) => boolean | Promise<boolean>, async: true): LinqAsync<T>
-
   chain<R>(gen: (source: Iterable<T>, ...args: any[]) => Iterable<R>, ...args: any[]): Linq<R>
 }
 
@@ -80,6 +80,7 @@ export interface LinqAsync<T> extends AsyncIterable<T> {
   first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   last(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   orderBy(comparer: (a: T, b: T) => number): LinqAsync<T>
+  parallel<R>(func:(value:T)=>Promise<R>): LinqAsync<R>;
   selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>): LinqAsync<R>;
   select<R>(selector: (value: T, index: number) => R | Promise<R>): LinqAsync<R>;
   skipWhile(predicate: (value: T) => boolean | Promise<boolean>): LinqAsync<T>
@@ -88,6 +89,7 @@ export interface LinqAsync<T> extends AsyncIterable<T> {
   take(count: number): LinqAsync<T>
   toArray(): Promise<T[]>
   where(predicate: (value: T, index: number) => boolean | Promise<boolean>): LinqAsync<T>;
+  chain<R>(gen: (source: AsyncIterable<T>, ...args: any[]) => Iterable<R>, ...args: any[]): LinqAsync<R>
 }
 
 export class _Linq<T> implements Linq<T> {
@@ -176,6 +178,9 @@ class _LinqAsync<T> implements LinqAsync<T> {
   orderBy(comparer: (a: T, b: T) => number) {
     return new _LinqAsync<T>(() => _orderByAsync(this, comparer));
   }
+  parallel<R>(func:(value:T)=>Promise<R>) {
+    return new _LinqAsync<R>(() => _parallelAsync(this, func));
+  }
   selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>) {
     return new _LinqAsync<R>(() => _selectManyAsync(this, selector));
   }
@@ -199,5 +204,10 @@ class _LinqAsync<T> implements LinqAsync<T> {
   }
   where(predicate: (value: T, index: number) => boolean | Promise<boolean>) {
     return new _LinqAsync<T>(() => _whereAsync(this, predicate));
+  }
+  chain<R>(gen: (source: AsyncIterable<T>, ...args: any[]) => Iterable<R>, ...args: any[]) {
+    return new _LinqAsync<R>(() => {
+      return gen(this._iterable())[Symbol.asyncIterator]()
+    })
   }
 }

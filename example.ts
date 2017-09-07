@@ -1,39 +1,26 @@
-import { where, select, first } from './src';
-import { linq, Linq, _Linq } from './src'
+import { linq } from './src';
+
 
 let data = {
   *[Symbol.iterator]() {
-    yield 1;
-    yield 2;
-    yield 3;
-    yield 4;
-    yield 9;
-    yield 11;
+
   }
 }
 
-async function main() {
-  let isNumber = function* (source) {
-    for (let item of source) {
-      if (typeof item === "number") {
-        yield item as number;
-      }
-    }
-  };
-
-  let query = function (source: Iterable<number>) {
-    return linq(source)
-      .where(x => x >= 2)
-      .select(x => x * 2)
-  };
-  
-  let results = linq([1, 2, 5, "hello", true])
-    .chain(isNumber)
-    .chain(query)
-    .skip(1)
-    .toArray();
-
-  console.log(results);
+function delay(duration) {
+  return new Promise(r => setTimeout(r, duration));
 }
 
-main().catch(console.log)
+async function main() {
+  for await (let item of
+    linq(data, true)
+      .parallel(async (value) => {
+        console.log("execute ", value);
+        await delay(value * 1000);
+      })
+  ) {
+    console.log(item);
+  }
+}
+
+main();
