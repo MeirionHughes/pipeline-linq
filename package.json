@@ -1,6 +1,25 @@
 {
+  "name": "pipeline-linq",
+  "version": "0.1.0",
+  "author": {
+    "name": "Meirion Hughes",
+    "email": "crakinshot@yahoo.com",
+    "url": "https://github.com/MeirionHughes"
+  },
+  "dependencies": {
+    "core-js": "^2.5.1"    
+  },
   "devDependencies": {
-    "core-js": "^2.5.1",
-    "typescript": "^2.5.2"
-  }
+    "typescript": "^2.5.2",
+    "rimraf": "^2.6.1"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && npm run build:es2015 && npm run build:commonjs",
+    "build:es2015": "tsc --project tsconfig.json --rootDir src/ --outDir ./dist/es2015 --module es2015",
+    "build:commonjs": "tsc --project tsconfig.json --rootDir src/ --outDir ./dist/commonjs --module commonjs -d"
+  },
+  "main": "./dist/commonjs/index.js",
+  "module": "./dist/es2015/index.js",
+  "typings": "./dist/commonjs/index.d.ts"
 }
