@@ -1,0 +1,7 @@
+.vscode/
+example.ts
+src/
+tsconfig.json
+tslint.json
+yarn.lock
+.npmignore

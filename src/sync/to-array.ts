@@ -20,7 +20,9 @@ export function toArray<T, TArray extends TypedArray>(
     }*/
   } else {
     let items: T[] = [], i = 0;
-    for (const item of source) items.push(item);
+    for (const item of source) {
+      items.push(item);
+    }
     return items;
   }
 }

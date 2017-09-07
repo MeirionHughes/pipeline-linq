@@ -1,5 +1,5 @@
 # pipeline-linq
-sync and async generators/helpers to form linq-like iterable queries, complete will full typescript and es2015 `module` support. 
+sync/async generators and helpers to form typed linq-like iterable queries
 
 ## Install
 install with either npm or yarn: 
@@ -73,6 +73,42 @@ let select_ = select(where_, x => x * 2);
 let result = first(select_);
 ```
 
+## Advanced Usage
+
+The linq object has a method `chain` that can be used to insert custom iterators into the iterator chain. 
+
+A custom filter method: 
+
+```ts
+let isNumber = function* (source) {
+  for (let item of source) {
+    if (typeof item === "number") {
+      yield item as number;
+    }
+  }
+};
+
+let results = linq([10, "hello", true])
+  .chain(isNumber)
+  .toArray();
+```
+
+Storing a query and inserting into a search 
+
+```ts
+let query = function (source: Iterable<number>) {
+  return linq(source)
+    .where(x => x >= 2)
+    .select(x => x * 2)
+};
+
+let results = linq([1, 2, 5, "hello", true])
+  .chain(isNumber)
+  .chain(query)
+  .skip(1)
+  .toArray();
+```
+
 ## Pipeline Operator
 > see proposal [pipeline-operator](https://github.com/tc39/proposal-pipeline-operator)
 
@@ -85,16 +121,5 @@ import { where, select, first } from 'pipeline-linq';
 let result = [1, 2, 3, 4] 
   |> _ => where(_, x => x > 2)
   |> _ => select(_, x => x * 2)
-  |> _ => first(_);
+  |> first();
 ```
-
-it is hoped the final syntax will more or less resemble: 
-
-```js
-let result = [1, 2, 3, 4] 
-  :: where(x => x > 2)
-  :: select(x => x * 2)
-  :: first();
-```
-
-

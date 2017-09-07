@@ -69,6 +69,8 @@ export interface Linq<T> extends Iterable<T> {
   toArray(): T[];
   where(predicate: (value: T, index: number) => boolean): Linq<T>
   where(predicate: (value: T, index: number) => boolean | Promise<boolean>, async: true): LinqAsync<T>
+
+  chain<R>(gen: (source: Iterable<T>, ...args: any[]) => Iterable<R>, ...args: any[]): Linq<R>
 }
 
 export interface LinqAsync<T> extends AsyncIterable<T> {
@@ -77,18 +79,18 @@ export interface LinqAsync<T> extends AsyncIterable<T> {
   count(): Promise<number>
   first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   last(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
-  orderBy(comparer: (a: T, b: T) => number):LinqAsync<T>
+  orderBy(comparer: (a: T, b: T) => number): LinqAsync<T>
   selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>);
   select<R>(selector: (value: T, index: number) => R | Promise<R>);
   skipWhile(predicate: (value: T) => boolean | Promise<boolean>);
-  skip(count: number):LinqAsync<T>
+  skip(count: number): LinqAsync<T>
   takeWhile(predicate: (value: T) => boolean | Promise<boolean>);
-  take(count: number):LinqAsync<T>
-  toArray():Promise<T[]>
-  where(predicate: (value: T, index: number) => boolean | Promise<boolean>):LinqAsync<T>;
+  take(count: number): LinqAsync<T>
+  toArray(): Promise<T[]>
+  where(predicate: (value: T, index: number) => boolean | Promise<boolean>): LinqAsync<T>;
 }
 
-class _Linq<T> implements Linq<T> {
+export class _Linq<T> implements Linq<T> {
   [Symbol.iterator]
   [Symbol.asyncIterator];
   constructor(private _iterable) {
@@ -141,6 +143,11 @@ class _Linq<T> implements Linq<T> {
       return new _LinqAsync(() => _whereAsync(this, predicate))
     }
     return new _Linq<T>(() => _where(this, predicate));
+  }
+  chain<R>(gen: (source: Iterable<T>, ...args: any[]) => Iterable<R>, ...args: any[]) {
+    return new _Linq<R>(() => {
+      return gen(this._iterable())[Symbol.iterator]();
+    })
   }
 }
 
