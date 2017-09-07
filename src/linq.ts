@@ -80,11 +80,11 @@ export interface LinqAsync<T> extends AsyncIterable<T> {
   first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   last(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   orderBy(comparer: (a: T, b: T) => number): LinqAsync<T>
-  selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>);
-  select<R>(selector: (value: T, index: number) => R | Promise<R>);
-  skipWhile(predicate: (value: T) => boolean | Promise<boolean>);
+  selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>): LinqAsync<R>;
+  select<R>(selector: (value: T, index: number) => R | Promise<R>): LinqAsync<R>;
+  skipWhile(predicate: (value: T) => boolean | Promise<boolean>): LinqAsync<T>
   skip(count: number): LinqAsync<T>
-  takeWhile(predicate: (value: T) => boolean | Promise<boolean>);
+  takeWhile(predicate: (value: T) => boolean | Promise<boolean>): LinqAsync<T>;
   take(count: number): LinqAsync<T>
   toArray(): Promise<T[]>
   where(predicate: (value: T, index: number) => boolean | Promise<boolean>): LinqAsync<T>;
