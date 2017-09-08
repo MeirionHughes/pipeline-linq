@@ -13,7 +13,7 @@ For versions `pipeline-linq @ < 1.0`, this package, when imported,  will polyfil
 
 ## Basic Usage
 
-`linq` is a helper function used to wrap and chain pipeline methods together. Simply pass through an object that implements `[Symbol.iterator]`
+`linq` is a helper function used to wrap and chain pipeline methods together. Simply pass through an object that implements `[Symbol.iterator]`, this includes `[]` or any typed-array. 
 
 ```ts
 import {linq} from 'pipeline-linq'
@@ -123,3 +123,6 @@ let result = [1, 2, 3, 4]
   |> _ => select(_, x => x * 2)
   |> first();
 ```
+
+## Acknowledgements
+

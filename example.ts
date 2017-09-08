@@ -1,25 +1,27 @@
 import { linq } from './src';
 
-
-let data = {
-  *[Symbol.iterator]() {
-
-  }
-}
-
 function delay(duration) {
   return new Promise(r => setTimeout(r, duration));
 }
 
+let data = {
+  async *[Symbol.asyncIterator]() {
+    for (let i = 0; i <= 2; i++){
+      await delay(100);
+      yield i; 
+    }
+  }
+}
+
 async function main() {
+  console.log("running...");
   for await (let item of
-    linq(data, true)
-      .parallel(async (value) => {
-        console.log("execute ", value);
-        await delay(value * 1000);
+    linq(data)
+      .parallel(async (x) => {
+        return x;
       })
   ) {
-    console.log(item);
+    console.log("completed", item);
   }
 }
 

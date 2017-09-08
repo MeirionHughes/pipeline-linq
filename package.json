@@ -7,7 +7,6 @@
     "url": "https://github.com/MeirionHughes"
   },
   "dependencies": {
-    "async-mutex": "^0.1.2",
     "core-js": "^2.5.1"
   },
   "devDependencies": {
@@ -18,8 +17,8 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:es2015 && npm run build:commonjs",
-    "build:es2015": "tsc --project tsconfig.json --rootDir src/ --outDir ./dist/es2015 --module es2015",
-    "build:commonjs": "tsc --project tsconfig.json --rootDir src/ --outDir ./dist/commonjs --module commonjs -d"
+    "build:es2015": "tsc --project tsconfig.build.json --rootDir src/ --outDir ./dist/es2015 --module es2015",
+    "build:commonjs": "tsc --project tsconfig.build.json --rootDir src/ --outDir ./dist/commonjs --module commonjs -d"
   },
   "main": "./dist/commonjs/index.js",
   "module": "./dist/es2015/index.js",

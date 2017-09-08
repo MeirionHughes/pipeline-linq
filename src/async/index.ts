@@ -2,6 +2,7 @@ export * from './all';
 export * from './any';
 export * from './await';
 export * from './count';
+export * from './each';
 export * from './first';
 export * from './last';
 export * from './order-by';

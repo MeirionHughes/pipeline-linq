@@ -1,6 +1,7 @@
 import { all as _all } from './sync';
 import { any as _any } from './sync';
 import { count as _count } from './sync';
+import { each as _each } from './sync';
 import { first as _first } from './sync';
 import { last as _last } from './sync';
 import { orderBy as _orderBy } from './sync';
@@ -16,6 +17,7 @@ import { where as _where } from './sync';
 import { all as _allAsync } from './async';
 import { any as _anyAsync } from './async';
 import { count as _countAsync } from './async';
+import { each as _eachAsync } from './async';
 import { first as _firstAsync } from './async';
 import { last as _lastAsync } from './async';
 import { orderBy as _orderByAsync } from './async';
@@ -57,6 +59,7 @@ export interface Linq<T> extends Iterable<T> {
   all(predicate: (value: T) => boolean): boolean;
   any(predicate: (value: T) => boolean): boolean;
   count(): number;
+  each(func: (value: T) => void): Linq<T>;
   first(predicate?: (value: T) => boolean): T | undefined;
   last(predicate?: (value: T) => boolean): T | undefined;
   orderBy(comparer: (a: T, b: T) => number): Linq<T>;
@@ -77,10 +80,12 @@ export interface LinqAsync<T> extends AsyncIterable<T> {
   all(predicate: (value: T) => boolean | Promise<boolean>);
   any(predicate: (value: T) => boolean | Promise<boolean>);
   count(): Promise<number>
+  each(func: (value: T) => Promise<any> | undefined): LinqAsync<T>;
   first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   last(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined>;
   orderBy(comparer: (a: T, b: T) => number): LinqAsync<T>
-  parallel<R>(func:(value:T)=>Promise<R>): LinqAsync<R>;
+  /** executes f(x) and yields in the order they complete */
+  parallel<R>(func: (value: T) => Promise<R>): LinqAsync<R>;
   selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>): LinqAsync<R>;
   select<R>(selector: (value: T, index: number) => R | Promise<R>): LinqAsync<R>;
   skipWhile(predicate: (value: T) => boolean | Promise<boolean>): LinqAsync<T>
@@ -107,6 +112,9 @@ export class _Linq<T> implements Linq<T> {
   }
   count() {
     return _count(this);
+  }
+  each(func: (value: T) => void): Linq<T> {
+    return new _Linq<T>(() => _each(this, func));
   }
   first(predicate?: (value: T) => boolean): T | undefined {
     return _first(this, predicate);
@@ -153,7 +161,7 @@ export class _Linq<T> implements Linq<T> {
   }
 }
 
-class _LinqAsync<T> implements LinqAsync<T> {
+class _LinqAsync<T> implements LinqAsync<T>, Iterable<Promise<T>> {
   [Symbol.iterator]
   [Symbol.asyncIterator];
   constructor(private _iterable) {
@@ -169,6 +177,9 @@ class _LinqAsync<T> implements LinqAsync<T> {
   count() {
     return _countAsync<T>(this);
   }
+  each(func: (value: T) => Promise<void> | void): LinqAsync<T> {
+    return new _LinqAsync<T>(() => _eachAsync(this, func));
+  }
   first(predicate?: (value: T) => boolean | Promise<boolean>): Promise<T | undefined> {
     return _firstAsync<T>(this, predicate);
   }
@@ -178,7 +189,7 @@ class _LinqAsync<T> implements LinqAsync<T> {
   orderBy(comparer: (a: T, b: T) => number) {
     return new _LinqAsync<T>(() => _orderByAsync(this, comparer));
   }
-  parallel<R>(func:(value:T)=>Promise<R>) {
+  parallel<R>(func: (value: T) => Promise<R>) {
     return new _LinqAsync<R>(() => _parallelAsync(this, func));
   }
   selectMany<R>(selector: (value: T, index: number) => AsyncIterable<R>) {

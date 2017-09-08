@@ -1,27 +1,34 @@
-import { EventEmitter } from 'events';
-import { Mutex } from 'async-mutex';
+import { Mutex } from '../mutex';
 
 export async function* parallel<T, R>(
   source: AsyncIterable<T>,
   func: (x: T) => Promise<R>
 ): AsyncIterable<R> {
 
-  let mutex = new Mutex();
-  
-  let complete = [];
-  let consumed = 0;
+  let runningResolve;
+  let running = new Promise(r => runningResolve = r);
 
-  // Consume items from the source;
+  let resultResolve;
+  let result = new Promise(r => resultResolve = r);
+
+  let runningCount = 0;
+  let mutex = new Mutex();
+  let results: R[] = [];
+  let error: any;
+
+  // Consume items from the source, run, and pump triggers on complete
   let consumer = new Promise(async (r, x) => {
     try {
       for await (const item of source) {
-        consumed += 1;
+        runningCount += 1;
+        runningResolve();
         func(item)
-          .catch(x)
-          .then((result) => {
-            complete.push(item);
-            console.log("emit next");
-            signal.emit("next");
+          .then(async (data) => {
+            await mutex.runExclusive(() => {
+              results.push(data);
+              runningCount -= 1;
+            });
+            resultResolve();
           });
       }
     }
@@ -29,38 +36,40 @@ export async function* parallel<T, R>(
     r();
   });
 
-  let produced = 0;
-  let first = true;
+  //guard against empty source
+  let task = await Promise.race([running, consumer]);
+
+  let consumedAll = task === consumer;
+
+  if (task === consumer && runningCount === 0)
+    return;
+
+  let stillRunning = runningCount;
+  let available;
+  let consumed = false;
 
   do {
-    console.log("entering loop... ");
+    let tasks = [result];
 
-    if (first) {
-      await Promise.race([new Promise(_ => {
-        signal.once("next", _);
-      }), consumer]);
-      first = false;
+    if (!consumedAll) {
+      tasks.push(consumer);
     }
+    
+    let winner = await Promise.race([result, consumer]);
 
-    if (complete.length == 0) {
-      console.log("breaking out...");
-      break;
+    consumedAll = winner == consumer;
+
+    await mutex.runExclusive(() => {
+      result = new Promise(r => resultResolve = r);
+      stillRunning = runningCount;
+      available = results;
+      results = [];
+
+    });
+    for (let item of available) {
+      yield item;
     }
-
-    while (complete.length > 0) {
-      let foo = complete.shift();
-      console.log("shifted: " + foo);
-      produced += 1;
-      yield foo;
-    }
-  } while (produced < consumed);
-
-  console.log("exited loop...");
-  await consumer;
-}
-
-function promiseState(p) {
-  const t = {};
-  return Promise.race([p, t])
-    .then(v => (v === t) ? "pending" : "fulfilled", () => "rejected");
+    console.log("stillRunning", stillRunning);
+  } while (stillRunning > 0)
+  console.log("exit parallel");
 }
